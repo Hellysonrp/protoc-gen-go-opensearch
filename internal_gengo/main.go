@@ -86,8 +86,11 @@ func processMessage(g *protogen.GeneratedFile, f *fileInfo, m *protogen.Message)
 			g.P("}")
 		case protoreflect.Uint64Kind:
 			// unsigned_long
+			// opensearch doesn't have unsigned_long yet
+			// https://github.com/opensearch-project/OpenSearch/issues/2083
+			// use keyword instead
 			g.P("mapping[\"", ff.Desc.JSONName(), "\"] = ", opensearchMappingType, "{")
-			g.P("Type: \"unsigned_long\",")
+			g.P("Type: \"keyword\",")
 			g.P("}")
 		case protoreflect.FloatKind:
 			// float
