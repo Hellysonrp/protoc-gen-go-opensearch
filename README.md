@@ -38,14 +38,16 @@ if err != nil {
     panic(err)
 }
 
-buf := bytes.NewBuffer(b)
-
 ...
 
 // this is only an example
 // you may want to get the response and error
-opensearchapi.SearchRequest{
-    Index: []string{index},
-    Body:  buf,
+opensearchapi.IndicesCreateRequest{
+    Index: index,
+    Body: strings.NewReader(fmt.Sprintf(`
+        {
+            "mappings": %s
+        }
+    `, string(b))),
 }.Do(ctx, client)
 ```
