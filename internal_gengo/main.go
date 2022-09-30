@@ -59,8 +59,6 @@ func processMessage(g *protogen.GeneratedFile, f *fileInfo, m *protogen.Message)
 
 	g.P("func (*", m.GoIdent, ") GetOpensearchMappings() map[string]", opensearchMappingType, " {")
 
-	initializedFalseBool := false
-
 	g.P("mapping := make(map[string]", opensearchMappingType, ", ", len(m.Fields), ")")
 	for _, ff := range m.Fields {
 		if ff.Desc.IsMap() {
@@ -69,6 +67,12 @@ func processMessage(g *protogen.GeneratedFile, f *fileInfo, m *protogen.Message)
 
 		// too painful to map manually
 		if ff.Message != nil && ff.Message.GoIdent.String() == `"\"google.golang.org/protobuf/types/known/structpb\"".Value` {
+			continue
+		}
+
+		// marshalled as the underlying message in most cases
+		// there is no way to know its properties
+		if ff.Message.GoIdent.String() == `"\"google.golang.org/protobuf/types/known/anypb\"".Any` {
 			continue
 		}
 
@@ -123,15 +127,9 @@ func processMessage(g *protogen.GeneratedFile, f *fileInfo, m *protogen.Message)
 			g.P("},")
 			g.P("}")
 		case protoreflect.BytesKind:
-			// byte with index false
-			if !initializedFalseBool {
-				g.P("falseBool := false")
-				initializedFalseBool = true
-			}
-
+			// binary
 			g.P("mapping[\"", ff.Desc.JSONName(), "\"] = ", opensearchMappingType, "{")
-			g.P("Type: \"byte\",")
-			g.P("Index: &falseBool,")
+			g.P("Type: \"binary\",")
 			g.P("}")
 		case protoreflect.MessageKind, protoreflect.GroupKind:
 			// nested
@@ -141,30 +139,6 @@ func processMessage(g *protogen.GeneratedFile, f *fileInfo, m *protogen.Message)
 				g.P("mapping[\"", ff.Desc.JSONName(), "\"] = ", opensearchMappingType, "{")
 				g.P("Type: \"date_nanos\",")
 				g.P("Format: \"strict_date_optional_time_nanos\",")
-				g.P("}")
-			} else if ff.Message.GoIdent.String() == `"\"google.golang.org/protobuf/types/known/anypb\"".Any` {
-				if !initializedFalseBool {
-					g.P("falseBool := false")
-					initializedFalseBool = true
-				}
-
-				g.P("mapping[\"", ff.Desc.JSONName(), "\"] = ", opensearchMappingType, "{")
-				g.P("Type: \"nested\",")
-				g.P("Properties: map[string]", opensearchMappingType, "{")
-				g.P("\"type_url\": ", opensearchMappingType, "{")
-				g.P("Type: \"text\",")
-				g.P("Fields: map[string]", opensearchMappingType, "{")
-				g.P("\"keyword\": ", opensearchMappingType, "{")
-				g.P("Type: \"keyword\",")
-				g.P("IgnoreAbove: 256,")
-				g.P("},")
-				g.P("},")
-				g.P("},")
-				g.P("\"value\": ", opensearchMappingType, "{")
-				g.P("Type: \"byte\",")
-				g.P("Index: &falseBool,")
-				g.P("},")
-				g.P("},")
 				g.P("}")
 			} else {
 				g.P("mapping[\"", ff.Desc.JSONName(), "\"] = ", opensearchMappingType, "{")
