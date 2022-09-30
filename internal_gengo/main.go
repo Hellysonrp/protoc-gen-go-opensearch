@@ -136,23 +136,20 @@ func processMessage(g *protogen.GeneratedFile, f *fileInfo, m *protogen.Message)
 		case protoreflect.MessageKind, protoreflect.GroupKind:
 			// nested
 
-			if ff.Message.GoIdent.String() == `"\"google.golang.org/protobuf/types/known/anypb\"".Any` && !initializedFalseBool {
-				g.P("falseBool := false")
-				initializedFalseBool = true
-			}
-
-			g.P("mapping[\"", ff.Desc.JSONName(), "\"] = ", opensearchMappingType, "{")
-			g.P("Type: \"nested\",")
 			if ff.Message.GoIdent.String() == `"\"google.golang.org/protobuf/types/known/timestamppb\"".Timestamp` {
-				g.P("Properties: map[string]", opensearchMappingType, "{")
-				g.P("\"seconds\": ", opensearchMappingType, "{")
-				g.P("Type: \"long\",")
-				g.P("},")
-				g.P("\"nanos\": ", opensearchMappingType, "{")
-				g.P("Type: \"integer\",")
-				g.P("},")
-				g.P("},")
+				// timestamppb.Timestamp is translated to a ISO datetime string
+				g.P("mapping[\"", ff.Desc.JSONName(), "\"] = ", opensearchMappingType, "{")
+				g.P("Type: \"date_nanos\",")
+				g.P("Format: \"strict_date_optional_time_nanos\",")
+				g.P("}")
 			} else if ff.Message.GoIdent.String() == `"\"google.golang.org/protobuf/types/known/anypb\"".Any` {
+				if !initializedFalseBool {
+					g.P("falseBool := false")
+					initializedFalseBool = true
+				}
+
+				g.P("mapping[\"", ff.Desc.JSONName(), "\"] = ", opensearchMappingType, "{")
+				g.P("Type: \"nested\",")
 				g.P("Properties: map[string]", opensearchMappingType, "{")
 				g.P("\"type_url\": ", opensearchMappingType, "{")
 				g.P("Type: \"text\",")
@@ -168,10 +165,13 @@ func processMessage(g *protogen.GeneratedFile, f *fileInfo, m *protogen.Message)
 				g.P("Index: &falseBool,")
 				g.P("},")
 				g.P("},")
+				g.P("}")
 			} else {
+				g.P("mapping[\"", ff.Desc.JSONName(), "\"] = ", opensearchMappingType, "{")
+				g.P("Type: \"nested\",")
 				g.P("Properties: (&", ff.Message.GoIdent, "{}).GetOpensearchMappings(),")
+				g.P("}")
 			}
-			g.P("}")
 		}
 	}
 	g.P("return mapping")

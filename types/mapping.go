@@ -10,6 +10,7 @@ type OpensearchDynamicTemplate struct {
 type OpensearchMapping struct {
 	Analyzer         string                                 `json:"analyzer,omitempty"`
 	Type             string                                 `json:"type,omitempty"`
+	Format           string                                 `json:"format,omitempty"`
 	Properties       map[string]OpensearchMapping           `json:"properties,omitempty"`
 	Fields           map[string]OpensearchMapping           `json:"fields,omitempty"`
 	Index            *bool                                  `json:"index,omitempty"`
