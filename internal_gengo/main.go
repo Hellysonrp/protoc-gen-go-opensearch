@@ -90,7 +90,7 @@ func processMessage(g *protogen.GeneratedFile, f *fileInfo, m *protogen.Message)
 			// https://github.com/opensearch-project/OpenSearch/issues/2083
 			// use keyword instead
 			g.P("mapping[\"", ff.Desc.JSONName(), "\"] = ", opensearchMappingType, "{")
-			g.P("Type: \"keyword\",")
+			g.P("Type: \"long\",")
 			g.P("}")
 		case protoreflect.FloatKind:
 			// float
