@@ -55,6 +55,7 @@ func processMessage(g *protogen.GeneratedFile, f *fileInfo, m *protogen.Message)
 	}
 
 	// TODO json field name or message field name
+	// TODO enum as string or enum as integer
 
 	g.P("func (*", m.GoIdent, ") GetOpensearchMappings() map[string]", opensearchMappingType, " {")
 
@@ -73,7 +74,15 @@ func processMessage(g *protogen.GeneratedFile, f *fileInfo, m *protogen.Message)
 
 		switch ff.Desc.Kind() {
 		case protoreflect.BoolKind:
+			// boolean
+			g.P("mapping[\"", ff.Desc.JSONName(), "\"] = ", opensearchMappingType, "{")
+			g.P("Type: \"boolean\",")
+			g.P("}")
 		case protoreflect.EnumKind:
+			// integer
+			g.P("mapping[\"", ff.Desc.JSONName(), "\"] = ", opensearchMappingType, "{")
+			g.P("Type: \"integer\",")
+			g.P("}")
 		case protoreflect.Int32Kind, protoreflect.Sint32Kind, protoreflect.Fixed32Kind, protoreflect.Sfixed32Kind:
 			// integer
 			g.P("mapping[\"", ff.Desc.JSONName(), "\"] = ", opensearchMappingType, "{")
