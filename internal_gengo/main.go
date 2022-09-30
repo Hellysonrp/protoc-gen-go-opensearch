@@ -65,15 +65,17 @@ func processMessage(g *protogen.GeneratedFile, f *fileInfo, m *protogen.Message)
 			continue
 		}
 
-		// too painful to map manually
-		if ff.Message != nil && ff.Message.GoIdent.String() == `"\"google.golang.org/protobuf/types/known/structpb\"".Value` {
-			continue
-		}
+		if ff.Message != nil {
+			// too painful to map manually
+			if ff.Message.GoIdent.String() == `"\"google.golang.org/protobuf/types/known/structpb\"".Value` {
+				continue
+			}
 
-		// marshalled as the underlying message in most cases
-		// there is no way to know its properties
-		if ff.Message.GoIdent.String() == `"\"google.golang.org/protobuf/types/known/anypb\"".Any` {
-			continue
+			// marshalled as the underlying message in most cases
+			// there is no way to know its properties
+			if ff.Message.GoIdent.String() == `"\"google.golang.org/protobuf/types/known/anypb\"".Any` {
+				continue
+			}
 		}
 
 		switch ff.Desc.Kind() {
