@@ -6,6 +6,8 @@
 package internal_gengo
 
 import (
+	"strings"
+
 	"google.golang.org/protobuf/compiler/protogen"
 	"google.golang.org/protobuf/reflect/protoreflect"
 
@@ -122,7 +124,7 @@ func processMessage(g *protogen.GeneratedFile, f *fileInfo, m *protogen.Message)
 			g.P("mapping[\"", ff.Desc.JSONName(), "\"] = ", opensearchMappingType, "{")
 			g.P("Type: \"text\",")
 			g.P("Fields: map[string]", opensearchMappingType, "{")
-			g.P("\"keyword\": ", opensearchMappingType, "{")
+			g.P("\"keyword\": {")
 			g.P("Type: \"keyword\",")
 			g.P("IgnoreAbove: 256,")
 			g.P("},")
@@ -138,10 +140,17 @@ func processMessage(g *protogen.GeneratedFile, f *fileInfo, m *protogen.Message)
 
 			if ff.Message.GoIdent.String() == `"\"google.golang.org/protobuf/types/known/timestamppb\"".Timestamp` {
 				// timestamppb.Timestamp is translated to a ISO datetime string
-				g.P("mapping[\"", ff.Desc.JSONName(), "\"] = ", opensearchMappingType, "{")
-				g.P("Type: \"date_nanos\",")
-				g.P("Format: \"strict_date_optional_time_nanos\",")
-				g.P("}")
+				if strings.Contains(ff.Comments.Leading.String(), "opensearch:date") || strings.Contains(ff.Comments.Trailing.String(), "opensearch:date") {
+					g.P("mapping[\"", ff.Desc.JSONName(), "\"] = ", opensearchMappingType, "{")
+					g.P("Type: \"date\",")
+					g.P("Format: \"strict_date_optional_time_nanos\",")
+					g.P("}")
+				} else {
+					g.P("mapping[\"", ff.Desc.JSONName(), "\"] = ", opensearchMappingType, "{")
+					g.P("Type: \"date_nanos\",")
+					g.P("Format: \"strict_date_optional_time_nanos\",")
+					g.P("}")
+				}
 			} else {
 				g.P("mapping[\"", ff.Desc.JSONName(), "\"] = ", opensearchMappingType, "{")
 				g.P("Type: \"nested\",")
